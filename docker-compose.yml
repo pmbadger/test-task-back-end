@@ -1,0 +1,39 @@
+services:
+  web:
+    container_name: web
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app:rw
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: >
+      sh -c "
+      poetry run python manage.py migrate &&
+      poetry run python -m debugpy --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000"
+  db:
+    container_name: db
+    image: postgres:15
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  frontend:
+    container_name: frontend
+    image: andrejch/testtask-frontend:test
+    ports:
+        - "3000:3000"
+    volumes:
+        - ./frontend:/app:rw
+    env_file:
+        - .env
+    depends_on:
+      - web
+    command: npm run start
+
+volumes:
+  postgres_data:
